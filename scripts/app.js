@@ -1,5 +1,6 @@
 const app = {
     data: [], 
+    quizQueue: [], // Hàng đợi câu hỏi cho trắc nghiệm
     currentTopic: '',
     currentIndex: 0,
     score: 0,
@@ -7,24 +8,31 @@ const app = {
     difficult: JSON.parse(localStorage.getItem('vocab_difficult')) || [],
 
     init: function() {
+        // Tải danh sách chủ đề ngầm
         this.loadTopics();
         this.updateReviewStats();
+        // Mặc định hiện trang Landing Page
+        this.showSection('landing-page');
     },
 
+    // --- NAVIGATION ---
     showSection: function(id) {
         document.querySelectorAll('main > section').forEach(sec => {
             sec.classList.add('hidden');
             sec.classList.remove('active-section');
         });
         const active = document.getElementById(id);
-        active.classList.remove('hidden');
-        setTimeout(() => active.classList.add('active-section'), 10);
+        if(active) {
+            active.classList.remove('hidden');
+            setTimeout(() => active.classList.add('active-section'), 10);
+        }
         if(id === 'review-section') this.updateReviewStats();
     },
 
+    // --- DATA LOADING ---
     loadTopics: async function() {
         const container = document.getElementById('topic-list');
-        container.innerHTML = '<div class="loader">Loading...</div>';
+        container.innerHTML = '<div class="loader">Đang tải...</div>';
         
         try {
             const response = await fetch('data/topics.json');
@@ -42,7 +50,8 @@ const app = {
                 container.appendChild(btn);
             });
         } catch (error) {
-            container.innerHTML = '<p style="color:red; text-align:center">Lỗi: Không tìm thấy file topics.json trong thư mục data</p>';
+            console.error(error);
+            container.innerHTML = '<p style="color:red; text-align:center">Lỗi tải dữ liệu. Hãy kiểm tra file data/topics.json</p>';
         }
     },
 
@@ -50,9 +59,7 @@ const app = {
         const templates = [
             `I am trying to remember the word "<strong>${word}</strong>".`,
             `The teacher explained the meaning of "<strong>${word}</strong>" in class.`,
-            `Have you ever heard the word "<strong>${word}</strong>" before?`,
             `It is important to understand what "<strong>${word}</strong>" means.`,
-            `We can use "<strong>${word}</strong>" in many different contexts.`,
             `Today's keyword is "<strong>${word}</strong>".`
         ];
         return templates[Math.floor(Math.random() * templates.length)];
@@ -71,12 +78,13 @@ const app = {
                 let word = row[0];
                 let meaning = row[1] || 'Đang cập nhật nghĩa...';
                 let example = row[2];
+                // Nếu không có ví dụ thì tự tạo
                 if (!example || example.trim() === "") example = this.generateAutoExample(word);
                 return { word, meaning, example };
             }).filter(item => item !== null);
 
             if (this.data.length === 0) {
-                alert("File này chưa có từ vựng nào!");
+                alert("File này rỗng!");
                 return;
             }
 
@@ -87,10 +95,11 @@ const app = {
             this.loadCard();
         } catch (error) {
             console.error(error);
-            alert('Lỗi đọc file! Hãy kiểm tra lại file Excel.');
+            alert('Lỗi đọc file! Kiểm tra lại định dạng Excel.');
         }
     },
 
+    // --- FLASHCARD LOGIC ---
     loadCard: function() {
         if (this.data.length === 0) return;
         const item = this.data[this.currentIndex];
@@ -98,6 +107,7 @@ const app = {
         const card = document.querySelector('.flashcard');
         card.classList.remove('flipped');
         
+        // Reset animation
         card.style.animation = 'none';
         card.offsetHeight; 
         card.style.animation = 'fadeIn 0.5s';
@@ -116,12 +126,12 @@ const app = {
             this.currentIndex++;
             this.loadCard();
         } else {
-            if(confirm("Bạn đã học hết từ vựng chủ đề này! Chuyển sang chơi game nhé?")) {
+            if(confirm("Bạn đã học hết từ vựng! Chuyển sang chơi game ôn tập?")) {
                 this.playGameMode();
             }
         }
     },
-
+    
     prevCard: function() {
         if (this.currentIndex > 0) {
             this.currentIndex--;
@@ -141,7 +151,7 @@ const app = {
             this.learned.push(word);
             localStorage.setItem('vocab_learned', JSON.stringify(this.learned));
             const btn = document.querySelector('.btn-mark');
-            btn.innerHTML = 'Saved! <i class="fas fa-check"></i>';
+            btn.innerHTML = 'Đã lưu <i class="fas fa-check"></i>';
             setTimeout(() => btn.innerHTML = 'Đã thuộc <i class="fas fa-check"></i>', 1000);
         }
         this.nextCard();
@@ -166,10 +176,8 @@ const app = {
     updateReviewStats: function() {
         document.getElementById('total-learned').innerText = this.learned.length;
         document.getElementById('total-difficult').innerText = this.difficult.length;
-        
         const list = document.getElementById('difficult-list');
         list.innerHTML = '';
-        if(this.difficult.length === 0) list.innerHTML = '<p style="opacity:0.6">Chưa có từ khó nào.</p>';
         this.difficult.forEach(item => {
             const li = document.createElement('li');
             li.innerHTML = `<span>${item.word}</span> <small>${item.meaning}</small>`;
@@ -178,13 +186,13 @@ const app = {
     },
 
     resetProgress: function() {
-        if(confirm("Bạn có chắc muốn xóa toàn bộ lịch sử học?")) {
+        if(confirm("Xóa toàn bộ tiến độ học tập?")) {
             localStorage.clear();
             location.reload();
         }
     },
-    
-    // --- GAME LOGIC ---
+
+    // --- GAME AREA LOGIC ---
     playGameMode: function() {
         this.score = 0;
         this.showSection('games-section');
@@ -194,15 +202,20 @@ const app = {
         document.getElementById('game-area').innerHTML = '';
     },
 
+    // 1. GAME TRẮC NGHIỆM (Có điểm kết thúc)
     startQuiz: function() {
         document.getElementById('game-menu').style.display = 'none';
         const area = document.getElementById('game-area');
         area.classList.remove('hidden');
         
         if(this.data.length < 4) {
-            area.innerHTML = "<p style='text-align:center'>Cần ít nhất 4 từ vựng để chơi.</p>";
+            area.innerHTML = "<p>Cần ít nhất 4 từ để chơi.</p>";
             return;
         }
+        
+        // Tạo hàng đợi câu hỏi (xáo trộn toàn bộ từ vựng hiện có)
+        this.quizQueue = [...this.data].sort(() => Math.random() - 0.5);
+        this.score = 0;
         this.renderQuizQuestion();
     },
 
@@ -210,7 +223,26 @@ const app = {
         const area = document.getElementById('game-area');
         area.innerHTML = ''; 
 
-        const target = this.data[Math.floor(Math.random() * this.data.length)];
+        // Kiểm tra nếu hết câu hỏi -> KẾT THÚC
+        if (this.quizQueue.length === 0) {
+            area.innerHTML = `
+                <div class="question-box">
+                    <h2 style="color:var(--success)">Hoàn thành xuất sắc! 🎉</h2>
+                    <p>Bạn đã trả lời hết các từ vựng trong chủ đề này.</p>
+                    <h3>Điểm số: ${this.score}</h3>
+                    <div class="action-buttons">
+                        <button class="btn-prev" onclick="app.showSection('learning-dashboard')">Về bài học</button>
+                        <button class="btn-game-mode" onclick="app.playGameMode()">Chọn game khác</button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // Lấy câu hỏi từ hàng đợi
+        const target = this.quizQueue.pop(); 
+        
+        // Tạo 3 đáp án nhiễu
         let options = [target];
         while (options.length < 4) {
             let rand = this.data[Math.floor(Math.random() * this.data.length)];
@@ -221,13 +253,14 @@ const app = {
         // UI
         const scoreBoard = document.createElement('div');
         scoreBoard.className = 'score-board';
-        scoreBoard.innerHTML = `Score: <span>${this.score}</span>`;
+        scoreBoard.innerHTML = `Điểm: ${this.score} | Còn lại: ${this.quizQueue.length + 1}`;
         area.appendChild(scoreBoard);
 
         const questionBox = document.createElement('div');
         questionBox.className = 'question-box';
-        questionBox.innerHTML = `<h3>Chọn nghĩa của:</h3><h1 class="target-word">${target.word}</h1>`;
+        questionBox.innerHTML = `<h3>Chọn nghĩa của từ:</h3><h1 id="target-word" class="target-word">${target.word}</h1>`;
         
+        // Phát âm tự động
         const utterance = new SpeechSynthesisUtterance(target.word);
         utterance.lang = 'en-US';
         window.speechSynthesis.speak(utterance);
@@ -251,6 +284,7 @@ const app = {
                     setTimeout(() => this.renderQuizQuestion(), 1000);
                 } else {
                     btn.classList.add('wrong');
+                    // Hiện đáp án đúng
                     allBtns.forEach(b => {
                         if (b.innerText === target.meaning) b.classList.add('correct');
                     });
@@ -262,6 +296,103 @@ const app = {
         area.appendChild(grid);
     },
 
+    // 2. GAME ĐIỀN TỪ (Có giải thích lỗi sai)
+    startFillBlank: function() {
+        document.getElementById('game-menu').style.display = 'none';
+        const area = document.getElementById('game-area');
+        area.classList.remove('hidden');
+        area.innerHTML = '';
+
+        // Lọc những từ có ví dụ "thật" (không phải ví dụ tự tạo bởi code)
+        const validItems = this.data.filter(item => 
+            item.example && 
+            !item.example.includes("I am trying to remember") && 
+            item.example.toLowerCase().includes(item.word.toLowerCase())
+        );
+
+        if(validItems.length < 4) {
+            area.innerHTML = "<p style='text-align:center'>Cần ít nhất 4 từ có câu ví dụ đầy đủ để chơi game này.</p>";
+            return;
+        }
+
+        // Chọn câu hỏi ngẫu nhiên
+        const target = validItems[Math.floor(Math.random() * validItems.length)];
+        
+        // Thay thế từ bằng dấu ______
+        const regex = new RegExp(target.word, 'gi');
+        const blankSentence = target.example.replace(regex, "_______");
+
+        // Tạo đáp án
+        let options = [target];
+        while (options.length < 4) {
+            let rand = this.data[Math.floor(Math.random() * this.data.length)];
+            if (!options.includes(rand)) options.push(rand);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        // UI
+        const questionBox = document.createElement('div');
+        questionBox.className = 'question-box';
+        questionBox.innerHTML = `
+            <h3>Điền từ vào chỗ trống:</h3>
+            <p style="font-size:1.3rem; font-style:italic; color:#555">"${blankSentence}"</p>
+        `;
+        area.appendChild(questionBox);
+
+        const grid = document.createElement('div');
+        grid.className = 'options-grid';
+
+        // Hộp Feedback (ẩn mặc định)
+        const feedbackBox = document.createElement('div');
+        feedbackBox.className = 'feedback-box hidden';
+        area.appendChild(feedbackBox);
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'game-btn';
+            btn.innerText = opt.word; // Hiển thị từ tiếng Anh
+            
+            btn.onclick = () => {
+                const allBtns = grid.querySelectorAll('button');
+                allBtns.forEach(b => b.disabled = true);
+
+                if (opt.word === target.word) {
+                    // ĐÚNG
+                    btn.classList.add('correct');
+                    feedbackBox.innerHTML = `<h4 style="color:var(--success)">Chính xác! 🎉</h4><p>${target.example}</p>`;
+                    feedbackBox.style.borderLeftColor = 'var(--success)';
+                    feedbackBox.style.background = '#e6fffa';
+                    feedbackBox.classList.remove('hidden');
+                    setTimeout(() => app.startFillBlank(), 2000);
+                } else {
+                    // SAI - Hiện giải thích chi tiết
+                    btn.classList.add('wrong');
+                    feedbackBox.innerHTML = `
+                        <h4>Sai rồi! 😢</h4>
+                        <p><strong>Bạn chọn:</strong> "<b>${opt.word}</b>" (Nghĩa: ${opt.meaning})</p>
+                        <p><strong>Nhưng câu này cần:</strong> "<b>${target.word}</b>" (Nghĩa: ${target.meaning})</p>
+                        <hr style="margin:10px 0; border:0; border-top:1px solid #ddd">
+                        <p><strong>Câu đúng:</strong> ${target.example}</p>
+                    `;
+                    feedbackBox.classList.remove('hidden');
+                    
+                    // Nút chơi tiếp
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'btn-next';
+                    nextBtn.style.marginTop = '15px';
+                    nextBtn.innerText = 'Câu tiếp theo ➡';
+                    nextBtn.onclick = () => app.startFillBlank();
+                    feedbackBox.appendChild(nextBtn);
+                }
+            };
+            grid.appendChild(btn);
+        });
+
+        // Chèn grid vào trước feedback
+        area.insertBefore(grid, feedbackBox);
+    },
+
+    // 3. GAME NỐI TỪ
     startMatching: function() {
         document.getElementById('game-menu').style.display = 'none';
         const area = document.getElementById('game-area');
@@ -269,7 +400,7 @@ const app = {
         area.innerHTML = '';
 
         if(this.data.length < 4) {
-            area.innerHTML = "<p style='text-align:center'>Cần ít nhất 4 từ để chơi.</p>";
+            area.innerHTML = "<p>Cần ít nhất 4 từ để chơi.</p>";
             return;
         }
 
@@ -285,7 +416,7 @@ const app = {
 
         const scoreBoard = document.createElement('div');
         scoreBoard.className = 'score-board';
-        scoreBoard.innerHTML = `Pairs Left: <span id="pairs-left">${pairsCount}</span>`;
+        scoreBoard.innerHTML = `Cặp còn lại: <span id="pairs-left">${pairsCount}</span>`;
         area.appendChild(scoreBoard);
 
         const grid = document.createElement('div');
@@ -326,7 +457,7 @@ const app = {
                         document.getElementById('pairs-left').innerText = pairsCount;
                         
                         if(pairsCount === 0) {
-                            setTimeout(() => alert("Bạn đã chiến thắng! 🎉"), 500);
+                            setTimeout(() => alert("Chiến thắng! 🎉"), 500);
                             setTimeout(() => app.playGameMode(), 1500);
                         }
                     } else {
@@ -342,7 +473,6 @@ const app = {
             };
             grid.appendChild(card);
         });
-
         area.appendChild(grid);
 
         function resetBoard() {
@@ -352,4 +482,5 @@ const app = {
     }
 };
 
+// Khởi chạy ứng dụng
 window.onload = () => app.init();

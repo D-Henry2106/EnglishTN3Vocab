@@ -20,16 +20,28 @@
     </nav>
 
     <main id="app">
-        <section id="topic-selection" class="active-section">
-            <h2>Chọn chủ đề để học</h2>
+        <section id="landing-page" class="active-section">
+            <div class="landing-content">
+                <h1>Nâng cao từ vựng<br>mỗi ngày</h1>
+                <p>Học tiếng Anh hiệu quả qua Flashcard, Trắc nghiệm và Game tương tác.</p>
+                <button class="btn-start" onclick="app.showSection('topic-selection')">Bắt đầu học ngay 🚀</button>
+            </div>
+        </section>
+
+        <section id="topic-selection" class="hidden">
+            <div class="toolbar">
+                <button onclick="app.showSection('landing-page')"><i class="fas fa-home"></i> Trang chủ</button>
+                <h2>Chọn chủ đề</h2>
+                <div style="width:100px"></div>
+            </div>
             <div id="topic-list" class="grid-container">
-                <p class="loading">Đang tải danh sách...</p>
+                <p class="loading">Đang tải danh sách chủ đề...</p>
             </div>
         </section>
 
         <section id="learning-dashboard" class="hidden">
             <div class="toolbar">
-                <button onclick="app.showSection('topic-selection')"><i class="fas fa-arrow-left"></i> Quay lại</button>
+                <button onclick="app.showSection('topic-selection')"><i class="fas fa-arrow-left"></i> Đổi chủ đề</button>
                 <h2 id="current-topic-name">Topic Name</h2>
                 <div class="controls">
                     <button onclick="app.toggleShuffle()"><i class="fas fa-random"></i> Trộn thẻ</button>
@@ -47,7 +59,7 @@
                     <div class="front">
                         <h2 id="card-word">Word</h2>
                         <i class="fas fa-volume-up speak-icon" onclick="event.stopPropagation(); app.speakWord()"></i>
-                        <p class="hint-text">(Chạm để lật)</p>
+                        <p class="hint-text">(Chạm để xem nghĩa)</p>
                     </div>
                     <div class="back">
                         <p id="card-meaning">Meaning</p>
@@ -76,12 +88,17 @@
                 <div class="game-card-select" onclick="app.startQuiz()">
                     <div class="game-icon">❓</div>
                     <h3>Trắc Nghiệm</h3>
-                    <p>Chọn nghĩa đúng cho từ vựng</p>
+                    <p>Chọn nghĩa đúng (Có tính điểm)</p>
+                </div>
+                <div class="game-card-select" onclick="app.startFillBlank()">
+                    <div class="game-icon">📝</div>
+                    <h3>Điền Từ</h3>
+                    <p>Hoàn thành câu đúng ngữ pháp</p>
                 </div>
                 <div class="game-card-select" onclick="app.startMatching()">
                     <div class="game-icon">🧩</div>
                     <h3>Nối Từ</h3>
-                    <p>Ghép từ tiếng Anh với nghĩa tiếng Việt</p>
+                    <p>Ghép từ Anh - Việt</p>
                 </div>
             </div>
 
