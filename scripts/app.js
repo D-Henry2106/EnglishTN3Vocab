@@ -1,6 +1,7 @@
 const app = {
     data: [], 
     quizQueue: [], 
+    scrambleQueue: [], // Hàng đợi riêng cho game sắp xếp
     currentTopic: '',
     currentIndex: 0,
     score: 0,
@@ -211,7 +212,7 @@ const app = {
 
         const scoreBoard = document.createElement('div');
         scoreBoard.className = 'score-board';
-        scoreBoard.innerHTML = `Điểm: ${this.score}`;
+        scoreBoard.innerHTML = `Điểm: ${this.score} | Còn: ${this.quizQueue.length + 1}`;
         area.appendChild(scoreBoard);
 
         const questionBox = document.createElement('div');
@@ -254,7 +255,6 @@ const app = {
         const validItems = this.data.filter(item => {
             if (!item.example) return false;
             const ex = item.example.toLowerCase();
-            // Lọc các câu ví dụ "tự động" để tránh lỗi đáp án
             const generic = ["trying to remember", "today's keyword", "important to understand", "explained the meaning"];
             if (generic.some(g => ex.includes(g))) return false;
             if (!ex.includes(item.word.toLowerCase())) return false;
@@ -263,12 +263,7 @@ const app = {
         });
 
         if(validItems.length < 4) { 
-            area.innerHTML = `
-                <div class="question-box">
-                    <h3>⚠️ Chưa đủ dữ liệu</h3>
-                    <p>Cần ít nhất 4 từ có câu ví dụ cụ thể trong file Excel.</p>
-                    <button class="btn-prev" onclick='app.playGameMode()'>Quay lại</button>
-                </div>`; 
+            area.innerHTML = `<div class="question-box"><h3>⚠️ Chưa đủ dữ liệu</h3><p>Cần ít nhất 4 từ có câu ví dụ cụ thể.</p><button class="btn-prev" onclick='app.playGameMode()'>Quay lại</button></div>`; 
             return; 
         }
 
@@ -304,15 +299,12 @@ const app = {
                 if (opt.word === target.word) {
                     btn.classList.add('correct');
                     feedbackBox.innerHTML = `<h4 style="color:var(--success)">Chính xác!</h4><p>${target.example}</p>`;
-                    feedbackBox.style.borderLeftColor = 'var(--success)';
-                    feedbackBox.style.background = '#e6fffa';
                     feedbackBox.classList.remove('hidden');
                     setTimeout(() => app.startFillBlank(), 2000);
                 } else {
                     btn.classList.add('wrong');
                     allBtns.forEach(b => { if(b.innerText === target.word) b.classList.add('correct'); });
-                    
-                    feedbackBox.innerHTML = `<h4>Sai rồi!</h4><p>Bạn chọn: <b>${opt.word}</b></p><p>Đúng là: <b>${target.word}</b></p><hr><p>${target.example}</p><button class="btn-next" onclick="app.startFillBlank()" style="margin-top:10px">Tiếp theo</button>`;
+                    feedbackBox.innerHTML = `<h4>Sai rồi!</h4><p>Đúng: <b>${target.word}</b></p><hr><p>${target.example}</p><button class="btn-next" onclick="app.startFillBlank()" style="margin-top:10px">Tiếp theo</button>`;
                     feedbackBox.classList.remove('hidden');
                 }
             };
@@ -320,22 +312,41 @@ const app = {
         });
     },
 
-    // GAME 3: SẮP XẾP TỪ (MỚI)
+    // GAME 3: SẮP XẾP TỪ (ĐÃ SỬA LỖI & CÓ QUEUE & NÚT CHECK)
     startScramble: function() {
         document.getElementById('game-menu').style.display = 'none';
         const area = document.getElementById('game-area');
         area.classList.remove('hidden');
         
-        // Lấy 1 từ ngẫu nhiên
-        const target = this.data[Math.floor(Math.random() * this.data.length)];
-        const originalWord = target.word.toUpperCase().replace(/[^A-Z]/g, ''); // Chỉ lấy chữ cái
+        if(this.data.length < 4) { area.innerHTML = "<p>Cần ít nhất 4 từ.</p>"; return; }
+
+        // Khởi tạo hàng đợi nếu chưa có
+        this.scrambleQueue = [...this.data].sort(() => Math.random() - 0.5);
+        this.score = 0;
+        this.renderScrambleQuestion();
+    },
+
+    renderScrambleQuestion: function() {
+        const area = document.getElementById('game-area');
+        area.innerHTML = '';
+
+        // Kiểm tra kết thúc game
+        if (this.scrambleQueue.length === 0) {
+            area.innerHTML = `<div class="question-box"><h2 style="color:var(--success)">Hoàn thành! 🎉</h2><h3>Điểm: ${this.score}</h3><button class="btn-game-mode" onclick="app.playGameMode()">Menu Game</button></div>`;
+            return;
+        }
+
+        // Lấy từ tiếp theo
+        const target = this.scrambleQueue.pop();
+        const originalWord = target.word.toUpperCase().replace(/[^A-Z]/g, ''); 
         
-        // Tạo mảng ký tự và xáo trộn
         let scrambled = originalWord.split('').sort(() => 0.5 - Math.random());
-        let userAnswer = [];
 
         // UI
-        area.innerHTML = '';
+        const scoreBoard = document.createElement('div');
+        scoreBoard.className = 'score-board';
+        scoreBoard.innerHTML = `Điểm: ${this.score} | Còn: ${this.scrambleQueue.length + 1}`;
+        area.appendChild(scoreBoard);
         
         const questionBox = document.createElement('div');
         questionBox.className = 'question-box';
@@ -347,52 +358,72 @@ const app = {
         answerSlot.className = 'answer-slot';
         area.appendChild(answerSlot);
 
-        // Khu vực chứa các ký tự xáo trộn
+        // Khu vực chứa ký tự (Letter Pool)
         const letterPool = document.createElement('div');
         letterPool.className = 'letter-pool';
         area.appendChild(letterPool);
 
-        // Render các nút ký tự
-        scrambled.forEach((char, index) => {
+        // Feedback
+        const feedbackBox = document.createElement('div');
+        feedbackBox.className = 'feedback-box hidden';
+        area.appendChild(feedbackBox);
+
+        // Hàm di chuyển ký tự qua lại
+        function createTile(char) {
             const tile = document.createElement('div');
             tile.className = 'letter-tile';
             tile.innerText = char;
+            
             tile.onclick = function() {
-                // Di chuyển từ Pool lên Answer Slot
-                this.remove();
-                answerSlot.appendChild(this);
-                userAnswer.push(char);
-                checkWin();
-                
-                // Click ở trên thì trả về dưới
-                this.onclick = function() {
-                    this.remove();
+                // Kiểm tra xem đang ở đâu để di chuyển
+                if (this.parentElement === letterPool) {
+                    answerSlot.appendChild(this);
+                } else {
                     letterPool.appendChild(this);
-                    userAnswer.splice(userAnswer.indexOf(char), 1); // Xóa khỏi đáp án
-                };
+                }
             };
-            letterPool.appendChild(tile);
+            return tile;
+        }
+
+        scrambled.forEach(char => {
+            letterPool.appendChild(createTile(char));
         });
 
-        // Nút bỏ qua
-        const skipBtn = document.createElement('button');
-        skipBtn.className = 'btn-prev';
-        skipBtn.style.marginTop = '20px';
-        skipBtn.innerText = 'Từ khác ➡';
-        skipBtn.onclick = () => app.startScramble();
-        area.appendChild(skipBtn);
-
-        function checkWin() {
-            if (userAnswer.join('') === originalWord) {
-                // Hiệu ứng thắng
-                answerSlot.style.borderColor = 'var(--success)';
-                answerSlot.style.backgroundColor = '#e6fffa';
+        // Nút Kiểm tra (Check)
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'btn-check';
+        checkBtn.innerText = 'Kiểm tra ✅';
+        checkBtn.onclick = () => {
+            const userAnswer = Array.from(answerSlot.children).map(t => t.innerText).join('');
+            
+            if (userAnswer === originalWord) {
+                // ĐÚNG
+                this.score += 10;
+                scoreBoard.innerHTML = `Điểm: ${this.score} | Còn: ${this.scrambleQueue.length}`;
+                
+                feedbackBox.innerHTML = `<h4 style="color:var(--success)">Chính xác! 🎉</h4><p>${target.word}</p>`;
+                feedbackBox.style.background = '#e6fffa';
+                feedbackBox.style.borderLeftColor = 'var(--success)';
+                feedbackBox.classList.remove('hidden');
+                
                 const utterance = new SpeechSynthesisUtterance(target.word);
                 window.speechSynthesis.speak(utterance);
-                setTimeout(() => alert("Chính xác! 🎉"), 100);
-                setTimeout(() => app.startScramble(), 1000);
+
+                // Khóa nút
+                checkBtn.disabled = true;
+                checkBtn.style.opacity = 0.5;
+
+                setTimeout(() => this.renderScrambleQuestion(), 1500);
+            } else {
+                // SAI
+                answerSlot.style.animation = 'shake 0.4s';
+                setTimeout(() => answerSlot.style.animation = 'none', 400);
+                
+                feedbackBox.innerHTML = `<h4>Sai rồi! Thử lại nhé.</h4>`;
+                feedbackBox.classList.remove('hidden');
             }
-        }
+        };
+        area.appendChild(checkBtn);
     },
 
     // GAME 4: NỐI TỪ

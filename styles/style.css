@@ -62,8 +62,6 @@ main { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
 .game-card-select { background: white; width: 150px; padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: all 0.3s; border: 2px solid transparent; }
 .game-card-select:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(108, 92, 231, 0.2); border-color: var(--primary); }
 .game-icon { font-size: 2.5rem; margin-bottom: 10px; }
-.game-card-select h3 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.1rem; }
-.game-card-select p { font-size: 0.85rem; color: #666; margin: 0; }
 
 /* Game Common */
 .score-board { text-align: right; font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
@@ -89,18 +87,28 @@ main { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
 .match-card.matched { background: var(--success); opacity: 0; pointer-events: none; transform: scale(0); transition: all 0.5s; }
 .match-card.wrong { background: var(--danger); color: white; animation: shake 0.4s; }
 
-/* --- GAME SCRAMBLE (MỚI) --- */
+/* --- GAME SCRAMBLE (CẬP NHẬT) --- */
 .scramble-container { text-align: center; }
-.answer-slot { min-height: 70px; background: #f1f2f6; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 10px; border: 2px dashed #ccc; flex-wrap: wrap; }
-.letter-tile { width: 45px; height: 45px; background: white; border: 2px solid var(--primary); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; color: var(--primary); cursor: pointer; box-shadow: 0 4px 0 var(--primary-dark); transition: all 0.1s; user-select: none; }
+.answer-slot { 
+    min-height: 70px; background: #f1f2f6; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 10px; border: 2px dashed #ccc; flex-wrap: wrap; 
+}
+.letter-tile { 
+    width: 45px; height: 45px; background: white; border: 2px solid var(--primary); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; color: var(--primary); cursor: pointer; box-shadow: 0 4px 0 var(--primary-dark); transition: all 0.1s; user-select: none; 
+}
 .letter-tile:active { transform: translateY(4px); box-shadow: 0 0 0; }
-.letter-pool { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.letter-pool { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 20px; min-height: 70px;}
 .hint-text-game { color: #666; font-style: italic; margin-bottom: 10px; }
+
+/* Style nút Check cho Scramble */
+.btn-check { 
+    margin-top: 20px; padding: 12px 30px; background: var(--primary); color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+}
+.btn-check:hover { background: var(--primary-dark); transform: translateY(-2px); }
 
 /* Review List */
 #difficult-list li { background: white; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-/* Animation Keyframes */
+/* Animations */
 @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes popIn { 0% { transform: scale(0.9); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
@@ -112,6 +120,4 @@ main { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
     .matching-grid { grid-template-columns: repeat(2, 1fr); }
     .landing-content h1 { font-size: 2.2rem; }
     .game-card-select { width: 100%; margin-bottom: 10px; }
-    .flashcard-container { height: 280px; }
-    .action-buttons button { flex: 1 1 40%; font-size: 0.8rem; }
 }
