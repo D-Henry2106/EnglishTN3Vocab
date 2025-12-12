@@ -88,17 +88,22 @@
                 <div class="game-card-select" onclick="app.startQuiz()">
                     <div class="game-icon">❓</div>
                     <h3>Trắc Nghiệm</h3>
-                    <p>Chọn nghĩa đúng (Có tính điểm)</p>
+                    <p>Chọn nghĩa đúng</p>
                 </div>
                 <div class="game-card-select" onclick="app.startFillBlank()">
                     <div class="game-icon">📝</div>
                     <h3>Điền Từ</h3>
-                    <p>Hoàn thành câu đúng ngữ pháp</p>
+                    <p>Hoàn thành câu</p>
+                </div>
+                <div class="game-card-select" onclick="app.startScramble()">
+                    <div class="game-icon">🔠</div>
+                    <h3>Sắp Xếp</h3>
+                    <p>Ghép chữ cái</p>
                 </div>
                 <div class="game-card-select" onclick="app.startMatching()">
                     <div class="game-icon">🧩</div>
                     <h3>Nối Từ</h3>
-                    <p>Ghép từ Anh - Việt</p>
+                    <p>Ghép Anh - Việt</p>
                 </div>
             </div>
 
@@ -118,13 +123,10 @@
                 </div>
             </div>
             <button class="btn-danger" onclick="app.resetProgress()">Xóa toàn bộ dữ liệu học</button>
-            
-            <h3>Danh sách từ khó cần ôn lại</h3>
             <ul id="difficult-list"></ul>
         </section>
 
     </main>
-
     <script src="scripts/app.js"></script>
 </body>
 </html>

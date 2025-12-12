@@ -11,26 +11,8 @@
     --danger: #FF7675;
 }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    color: var(--text);
-    min-height: 100vh;
-}
-
-nav {
-    background: var(--surface);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
+body { font-family: 'Poppins', sans-serif; margin: 0; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text); min-height: 100vh; }
+nav { background: var(--surface); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
 .logo { font-weight: 700; font-size: 1.5rem; color: var(--primary); }
 nav button, nav a { background: transparent; border: none; color: var(--text); font-weight: 500; font-size: 0.95rem; cursor: pointer; margin-left: 20px; padding: 8px 16px; border-radius: 20px; transition: all 0.3s; text-decoration: none;}
 nav button:hover, nav a:hover { background: rgba(108, 92, 231, 0.1); color: var(--primary); }
@@ -39,32 +21,21 @@ main { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
 .hidden { display: none !important; }
 .active-section { animation: slideIn 0.4s ease-out; }
 
-/* --- LANDING PAGE (NEW) --- */
+/* Landing Page */
 #landing-page { text-align: center; padding-top: 50px; }
 .landing-content h1 { font-size: 3rem; color: var(--primary); margin-bottom: 20px; line-height: 1.2; }
 .landing-content p { font-size: 1.2rem; color: #666; margin-bottom: 40px; }
-.btn-start {
-    padding: 18px 45px;
-    font-size: 1.2rem;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
-    transition: transform 0.2s, background 0.2s;
-    font-weight: bold;
-}
+.btn-start { padding: 18px 45px; font-size: 1.2rem; background: var(--primary); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4); transition: transform 0.2s; font-weight: bold; }
 .btn-start:hover { transform: scale(1.05); background: var(--primary-dark); }
 
-/* Topic Grid */
+/* Common UI */
 .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; margin-top: 20px; }
 .topic-card { background: var(--surface); padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; text-align: center; transition: transform 0.3s; border: 1px solid rgba(0,0,0,0.02); }
 .topic-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(108, 92, 231, 0.15); border-color: var(--primary); }
 .topic-card .icon { font-size: 2.5rem; margin-bottom: 10px; }
 .topic-card h3 { font-size: 1rem; margin: 0; color: #444; word-break: break-word; }
 
-/* Flashcard Area */
+/* Flashcard */
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(255,255,255,0.8); padding: 15px; border-radius: 12px; backdrop-filter: blur(5px); }
 .flashcard-container { perspective: 1200px; margin: 20px auto; width: 100%; max-width: 500px; height: 320px; }
 .flashcard { width: 100%; height: 100%; position: relative; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; cursor: pointer; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-radius: 20px; }
@@ -86,36 +57,27 @@ main { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
 .progress-bar-container { width: 100%; background: #e0e0e0; height: 8px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
 .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; }
 
-/* --- GAME MENU --- */
-.game-menu { display: flex; justify-content: center; gap: 20px; margin-top: 40px; flex-wrap: wrap; }
-.game-card-select { background: white; width: 180px; padding: 25px; border-radius: 20px; text-align: center; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: all 0.3s; border: 2px solid transparent; }
+/* Game Menu */
+.game-menu { display: flex; justify-content: center; gap: 15px; margin-top: 40px; flex-wrap: wrap; }
+.game-card-select { background: white; width: 150px; padding: 20px; border-radius: 20px; text-align: center; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: all 0.3s; border: 2px solid transparent; }
 .game-card-select:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(108, 92, 231, 0.2); border-color: var(--primary); }
 .game-icon { font-size: 2.5rem; margin-bottom: 10px; }
 .game-card-select h3 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.1rem; }
 .game-card-select p { font-size: 0.85rem; color: #666; margin: 0; }
 
-/* GAME COMMON */
+/* Game Common */
 .score-board { text-align: right; font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
 .question-box { text-align: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-/* Quiz & Fill Blank Options */
+/* Quiz & Fill Blank */
 .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .game-btn { padding: 20px; background: white; border: 2px solid #eee; border-radius: 12px; cursor: pointer; font-size: 1.1rem; color: var(--text); transition: all 0.2s; font-weight: 500; }
 .game-btn:hover:not([disabled]) { border-color: var(--primary); transform: translateY(-2px); }
 .game-btn.correct { background: var(--success); color: white; border-color: var(--success); animation: popIn 0.3s; }
 .game-btn.wrong { background: var(--danger); color: white; border-color: var(--danger); animation: shake 0.4s; }
 
-/* Feedback Box (Cho game điền từ) */
-.feedback-box {
-    margin-top: 25px;
-    padding: 20px;
-    border-radius: 12px;
-    background: #fff0f0;
-    border-left: 6px solid var(--danger);
-    text-align: left;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    animation: slideIn 0.3s;
-}
+/* Feedback Box */
+.feedback-box { margin-top: 25px; padding: 20px; border-radius: 12px; background: #fff0f0; border-left: 6px solid var(--danger); text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.05); animation: slideIn 0.3s; }
 .feedback-box h4 { margin: 0 0 10px 0; color: var(--danger); font-size: 1.2rem; }
 .feedback-box p { margin: 5px 0; color: #444; line-height: 1.5; }
 
@@ -127,6 +89,14 @@ main { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
 .match-card.matched { background: var(--success); opacity: 0; pointer-events: none; transform: scale(0); transition: all 0.5s; }
 .match-card.wrong { background: var(--danger); color: white; animation: shake 0.4s; }
 
+/* --- GAME SCRAMBLE (MỚI) --- */
+.scramble-container { text-align: center; }
+.answer-slot { min-height: 70px; background: #f1f2f6; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 10px; border: 2px dashed #ccc; flex-wrap: wrap; }
+.letter-tile { width: 45px; height: 45px; background: white; border: 2px solid var(--primary); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: bold; color: var(--primary); cursor: pointer; box-shadow: 0 4px 0 var(--primary-dark); transition: all 0.1s; user-select: none; }
+.letter-tile:active { transform: translateY(4px); box-shadow: 0 0 0; }
+.letter-pool { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.hint-text-game { color: #666; font-style: italic; margin-bottom: 10px; }
+
 /* Review List */
 #difficult-list li { background: white; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
@@ -136,7 +106,7 @@ main { padding: 30px 20px; max-width: 900px; margin: 0 auto; }
 @keyframes popIn { 0% { transform: scale(0.9); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }
 
-/* Mobile Responsive */
+/* Mobile */
 @media (max-width: 600px) {
     .options-grid { grid-template-columns: 1fr; }
     .matching-grid { grid-template-columns: repeat(2, 1fr); }
