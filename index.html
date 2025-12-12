@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Master</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">VocabMaster</div>
+        <div class="nav-links">
+            <button onclick="app.showSection('topic-selection')">Topics</button>
+            <button onclick="app.showSection('review-section')">Review</button>
+            <a href="guide.html" target="_blank">User Guide</a>
+        </div>
+    </nav>
+
+    <main id="app">
+        <section id="topic-selection" class="active-section">
+            <h2>Choose a Topic</h2>
+            <div id="topic-list" class="grid-container">
+                <p class="loading">Loading topics...</p>
+            </div>
+        </section>
+
+        <section id="learning-dashboard" class="hidden">
+            <div class="toolbar">
+                <button onclick="app.showSection('topic-selection')"><i class="fas fa-arrow-left"></i> Back</button>
+                <h2 id="current-topic-name">Topic Name</h2>
+                <div class="controls">
+                    <button onclick="app.toggleShuffle()"><i class="fas fa-random"></i> Shuffle</button>
+                    <button onclick="app.playGameMode()">🎮 Play Games</button>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <p id="progress-text">0 / 0</p>
+
+            <div class="flashcard-container">
+                <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                    <div class="front">
+                        <h2 id="card-word">Word</h2>
+                        <i class="fas fa-volume-up speak-icon" onclick="event.stopPropagation(); app.speakWord()"></i>
+                    </div>
+                    <div class="back">
+                        <p id="card-meaning">Meaning</p>
+                        <hr>
+                        <em id="card-example">Example sentence.</em>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-prev" onclick="app.prevCard()">Previous</button>
+                <button class="btn-mark" onclick="app.markAsLearned()">Mark Learned ✅</button>
+                <button class="btn-hard" onclick="app.markAsDifficult()">Mark Difficult ⚠️</button>
+                <button class="btn-next" onclick="app.nextCard()">Next</button>
+            </div>
+        </section>
+
+        <section id="games-section" class="hidden">
+            <button onclick="app.showSection('learning-dashboard')">Back to Learn</button>
+            <h2>Practice Games</h2>
+            
+            <div class="game-tabs">
+                <button onclick="game.startQuiz()">Multiple Choice</button>
+                <button onclick="game.startMatch()">Matching</button>
+            </div>
+
+            <div id="game-area">
+                <div class="placeholder-text">Select a game to start!</div>
+            </div>
+        </section>
+
+        <section id="review-section" class="hidden">
+            <h2>My Progress</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>Learned Words</h3>
+                    <span id="total-learned">0</span>
+                </div>
+                <div class="stat-box">
+                    <h3>Difficult Words</h3>
+                    <span id="total-difficult">0</span>
+                </div>
+            </div>
+            <button class="btn-danger" onclick="app.resetProgress()">Reset All Progress</button>
+            
+            <h3>Difficult Words List</h3>
+            <ul id="difficult-list"></ul>
+        </section>
+
+    </main>
+
+    <script src="scripts/app.js"></script>
+</body>
+</html>
