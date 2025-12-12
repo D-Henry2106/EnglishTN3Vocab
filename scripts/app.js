@@ -2,7 +2,7 @@ const app = {
     data: [], 
     currentTopic: '',
     currentIndex: 0,
-    score: 0, // Thêm biến điểm số
+    score: 0,
     learned: JSON.parse(localStorage.getItem('vocab_learned')) || [],
     difficult: JSON.parse(localStorage.getItem('vocab_difficult')) || [],
 
@@ -42,7 +42,7 @@ const app = {
                 container.appendChild(btn);
             });
         } catch (error) {
-            container.innerHTML = '<p style="color:red; text-align:center">Lỗi: Không tìm thấy file topics.json</p>';
+            container.innerHTML = '<p style="color:red; text-align:center">Lỗi: Không tìm thấy file topics.json trong thư mục data</p>';
         }
     },
 
@@ -87,7 +87,7 @@ const app = {
             this.loadCard();
         } catch (error) {
             console.error(error);
-            alert('Lỗi đọc file! Kiểm tra lại file Excel.');
+            alert('Lỗi đọc file! Hãy kiểm tra lại file Excel.');
         }
     },
 
@@ -142,7 +142,7 @@ const app = {
             localStorage.setItem('vocab_learned', JSON.stringify(this.learned));
             const btn = document.querySelector('.btn-mark');
             btn.innerHTML = 'Saved! <i class="fas fa-check"></i>';
-            setTimeout(() => btn.innerHTML = 'Mark Learned <i class="fas fa-check"></i>', 1000);
+            setTimeout(() => btn.innerHTML = 'Đã thuộc <i class="fas fa-check"></i>', 1000);
         }
         this.nextCard();
     },
@@ -184,26 +184,33 @@ const app = {
         }
     },
     
-    // --- GAME LOGIC MỚI ---
+    // --- GAME LOGIC ---
     playGameMode: function() {
-        this.score = 0; // Reset điểm
+        this.score = 0;
         this.showSection('games-section');
-        this.startQuiz();
+        document.getElementById('game-menu').classList.remove('hidden');
+        document.getElementById('game-menu').style.display = 'flex';
+        document.getElementById('game-area').classList.add('hidden');
+        document.getElementById('game-area').innerHTML = '';
     },
 
     startQuiz: function() {
+        document.getElementById('game-menu').style.display = 'none';
         const area = document.getElementById('game-area');
-        area.innerHTML = ''; // Xóa nội dung cũ
-
+        area.classList.remove('hidden');
+        
         if(this.data.length < 4) {
-            area.innerHTML = "<p>Cần ít nhất 4 từ vựng để chơi game.</p>";
+            area.innerHTML = "<p style='text-align:center'>Cần ít nhất 4 từ vựng để chơi.</p>";
             return;
         }
+        this.renderQuizQuestion();
+    },
 
-        // Chọn từ khóa ngẫu nhiên
+    renderQuizQuestion: function() {
+        const area = document.getElementById('game-area');
+        area.innerHTML = ''; 
+
         const target = this.data[Math.floor(Math.random() * this.data.length)];
-        
-        // Chọn 3 đáp án sai
         let options = [target];
         while (options.length < 4) {
             let rand = this.data[Math.floor(Math.random() * this.data.length)];
@@ -211,26 +218,22 @@ const app = {
         }
         options.sort(() => Math.random() - 0.5);
 
-        // --- TẠO GIAO DIỆN GAME BẰNG JS (An toàn hơn HTML string) ---
-        
-        // 1. Hiển thị điểm
+        // UI
         const scoreBoard = document.createElement('div');
         scoreBoard.className = 'score-board';
         scoreBoard.innerHTML = `Score: <span>${this.score}</span>`;
         area.appendChild(scoreBoard);
 
-        // 2. Câu hỏi
         const questionBox = document.createElement('div');
         questionBox.className = 'question-box';
-        questionBox.innerHTML = `<h3>Chọn nghĩa đúng của:</h3><h1 class="target-word">${target.word}</h1>`;
-        // Tự động phát âm khi hiện câu hỏi
+        questionBox.innerHTML = `<h3>Chọn nghĩa của:</h3><h1 class="target-word">${target.word}</h1>`;
+        
         const utterance = new SpeechSynthesisUtterance(target.word);
-        utterance.lang = 'en-US'; 
+        utterance.lang = 'en-US';
         window.speechSynthesis.speak(utterance);
         
         area.appendChild(questionBox);
 
-        // 3. Lưới đáp án
         const grid = document.createElement('div');
         grid.className = 'options-grid';
 
@@ -238,34 +241,114 @@ const app = {
             const btn = document.createElement('button');
             btn.className = 'game-btn';
             btn.innerText = opt.meaning;
-            
-            // Gán sự kiện click trực tiếp
             btn.onclick = () => {
-                // Khóa tất cả nút
                 const allBtns = grid.querySelectorAll('button');
                 allBtns.forEach(b => b.disabled = true);
 
                 if (opt.word === target.word) {
                     btn.classList.add('correct');
                     this.score += 10;
-                    setTimeout(() => this.startQuiz(), 1000); // Chuyển câu sau 1s
+                    setTimeout(() => this.renderQuizQuestion(), 1000);
                 } else {
                     btn.classList.add('wrong');
-                    // Tìm và hiện đáp án đúng
                     allBtns.forEach(b => {
                         if (b.innerText === target.meaning) b.classList.add('correct');
                     });
-                    setTimeout(() => this.startQuiz(), 2000); // Chuyển câu sau 2s
+                    setTimeout(() => this.renderQuizQuestion(), 2000);
                 }
             };
             grid.appendChild(btn);
         });
-
         area.appendChild(grid);
     },
 
-    startMatch: function() {
-        document.getElementById('game-area').innerHTML = "<p style='text-align:center; padding:20px;'>Sắp ra mắt!</p>";
+    startMatching: function() {
+        document.getElementById('game-menu').style.display = 'none';
+        const area = document.getElementById('game-area');
+        area.classList.remove('hidden');
+        area.innerHTML = '';
+
+        if(this.data.length < 4) {
+            area.innerHTML = "<p style='text-align:center'>Cần ít nhất 4 từ để chơi.</p>";
+            return;
+        }
+
+        let pairsCount = Math.min(this.data.length, 6);
+        let gameData = [...this.data].sort(() => 0.5 - Math.random()).slice(0, pairsCount);
+
+        let cards = [];
+        gameData.forEach(item => {
+            cards.push({ id: item.word, text: item.word, type: 'en' });
+            cards.push({ id: item.word, text: item.meaning, type: 'vi' });
+        });
+        cards.sort(() => 0.5 - Math.random());
+
+        const scoreBoard = document.createElement('div');
+        scoreBoard.className = 'score-board';
+        scoreBoard.innerHTML = `Pairs Left: <span id="pairs-left">${pairsCount}</span>`;
+        area.appendChild(scoreBoard);
+
+        const grid = document.createElement('div');
+        grid.className = 'matching-grid';
+        
+        let firstCard = null;
+        let lockBoard = false;
+
+        cards.forEach(cardData => {
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerText = cardData.text;
+            card.dataset.id = cardData.id;
+
+            card.onclick = function() {
+                if (lockBoard) return;
+                if (this === firstCard) return;
+                if (this.classList.contains('matched')) return;
+
+                this.classList.add('selected');
+
+                if (!firstCard) {
+                    firstCard = this;
+                    if(cardData.type === 'en') {
+                        let u = new SpeechSynthesisUtterance(cardData.text);
+                        u.lang = 'en-US';
+                        window.speechSynthesis.speak(u);
+                    }
+                } else {
+                    let secondCard = this;
+                    lockBoard = true;
+
+                    if (firstCard.dataset.id === secondCard.dataset.id) {
+                        firstCard.classList.add('matched');
+                        secondCard.classList.add('matched');
+                        resetBoard();
+                        pairsCount--;
+                        document.getElementById('pairs-left').innerText = pairsCount;
+                        
+                        if(pairsCount === 0) {
+                            setTimeout(() => alert("Bạn đã chiến thắng! 🎉"), 500);
+                            setTimeout(() => app.playGameMode(), 1500);
+                        }
+                    } else {
+                        secondCard.classList.add('wrong');
+                        firstCard.classList.add('wrong');
+                        setTimeout(() => {
+                            firstCard.classList.remove('selected', 'wrong');
+                            secondCard.classList.remove('selected', 'wrong');
+                            resetBoard();
+                        }, 1000);
+                    }
+                }
+            };
+            grid.appendChild(card);
+        });
+
+        area.appendChild(grid);
+
+        function resetBoard() {
+            firstCard = null;
+            lockBoard = false;
+        }
     }
 };
 

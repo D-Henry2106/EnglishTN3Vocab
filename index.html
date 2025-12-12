@@ -13,27 +13,27 @@
     <nav>
         <div class="logo">VocabMaster</div>
         <div class="nav-links">
-            <button onclick="app.showSection('topic-selection')">Topics</button>
-            <button onclick="app.showSection('review-section')">Review</button>
-            <a href="guide.html" target="_blank">User Guide</a>
+            <button onclick="app.showSection('topic-selection')">Chủ đề</button>
+            <button onclick="app.showSection('review-section')">Ôn tập</button>
+            <a href="guide.html" target="_blank">Hướng dẫn</a>
         </div>
     </nav>
 
     <main id="app">
         <section id="topic-selection" class="active-section">
-            <h2>Choose a Topic</h2>
+            <h2>Chọn chủ đề để học</h2>
             <div id="topic-list" class="grid-container">
-                <p class="loading">Loading topics...</p>
+                <p class="loading">Đang tải danh sách...</p>
             </div>
         </section>
 
         <section id="learning-dashboard" class="hidden">
             <div class="toolbar">
-                <button onclick="app.showSection('topic-selection')"><i class="fas fa-arrow-left"></i> Back</button>
+                <button onclick="app.showSection('topic-selection')"><i class="fas fa-arrow-left"></i> Quay lại</button>
                 <h2 id="current-topic-name">Topic Name</h2>
                 <div class="controls">
-                    <button onclick="app.toggleShuffle()"><i class="fas fa-random"></i> Shuffle</button>
-                    <button onclick="app.playGameMode()">🎮 Play Games</button>
+                    <button onclick="app.toggleShuffle()"><i class="fas fa-random"></i> Trộn thẻ</button>
+                    <button class="btn-game-mode" onclick="app.playGameMode()">🎮 Chơi Game</button>
                 </div>
             </div>
 
@@ -47,52 +47,62 @@
                     <div class="front">
                         <h2 id="card-word">Word</h2>
                         <i class="fas fa-volume-up speak-icon" onclick="event.stopPropagation(); app.speakWord()"></i>
+                        <p class="hint-text">(Chạm để lật)</p>
                     </div>
                     <div class="back">
                         <p id="card-meaning">Meaning</p>
                         <hr>
-                        <em id="card-example">Example sentence.</em>
+                        <div id="card-example">Example sentence.</div>
                     </div>
                 </div>
             </div>
 
             <div class="action-buttons">
-                <button class="btn-prev" onclick="app.prevCard()">Previous</button>
-                <button class="btn-mark" onclick="app.markAsLearned()">Mark Learned ✅</button>
-                <button class="btn-hard" onclick="app.markAsDifficult()">Mark Difficult ⚠️</button>
-                <button class="btn-next" onclick="app.nextCard()">Next</button>
+                <button class="btn-prev" onclick="app.prevCard()">Quay lại</button>
+                <button class="btn-mark" onclick="app.markAsLearned()">Đã thuộc ✅</button>
+                <button class="btn-hard" onclick="app.markAsDifficult()">Từ khó ⚠️</button>
+                <button class="btn-next" onclick="app.nextCard()">Tiếp theo</button>
             </div>
         </section>
 
         <section id="games-section" class="hidden">
-            <button onclick="app.showSection('learning-dashboard')">Back to Learn</button>
-            <h2>Practice Games</h2>
+            <div class="toolbar">
+                <button onclick="app.showSection('learning-dashboard')"><i class="fas fa-arrow-left"></i> Về bài học</button>
+                <h2>Game Zone 🎮</h2>
+                <div style="width: 100px;"></div>
+            </div>
             
-            <div class="game-tabs">
-                <button onclick="game.startQuiz()">Multiple Choice</button>
-                <button onclick="game.startMatch()">Matching</button>
+            <div id="game-menu" class="game-menu">
+                <div class="game-card-select" onclick="app.startQuiz()">
+                    <div class="game-icon">❓</div>
+                    <h3>Trắc Nghiệm</h3>
+                    <p>Chọn nghĩa đúng cho từ vựng</p>
+                </div>
+                <div class="game-card-select" onclick="app.startMatching()">
+                    <div class="game-icon">🧩</div>
+                    <h3>Nối Từ</h3>
+                    <p>Ghép từ tiếng Anh với nghĩa tiếng Việt</p>
+                </div>
             </div>
 
-            <div id="game-area">
-                <div class="placeholder-text">Select a game to start!</div>
-            </div>
+            <div id="game-area" class="hidden"></div>
         </section>
 
         <section id="review-section" class="hidden">
-            <h2>My Progress</h2>
+            <h2>Tiến độ học tập</h2>
             <div class="stats">
                 <div class="stat-box">
-                    <h3>Learned Words</h3>
-                    <span id="total-learned">0</span>
+                    <h3>Đã thuộc</h3>
+                    <span id="total-learned" style="color:var(--success)">0</span>
                 </div>
                 <div class="stat-box">
-                    <h3>Difficult Words</h3>
-                    <span id="total-difficult">0</span>
+                    <h3>Từ khó</h3>
+                    <span id="total-difficult" style="color:var(--danger)">0</span>
                 </div>
             </div>
-            <button class="btn-danger" onclick="app.resetProgress()">Reset All Progress</button>
+            <button class="btn-danger" onclick="app.resetProgress()">Xóa toàn bộ dữ liệu học</button>
             
-            <h3>Difficult Words List</h3>
+            <h3>Danh sách từ khó cần ôn lại</h3>
             <ul id="difficult-list"></ul>
         </section>
 

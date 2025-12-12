@@ -62,7 +62,7 @@ main {
     margin: 0 auto;
 }
 
-.hidden { display: none; }
+.hidden { display: none !important; }
 .active-section { animation: slideIn 0.4s ease-out; }
 
 /* Topic Grid */
@@ -148,17 +148,19 @@ main {
 #card-word { font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; }
 #card-meaning { font-size: 1.5rem; font-weight: 600; color: #333; }
 #card-example { margin-top: 15px; color: #666; font-style: italic; line-height: 1.5; }
+.hint-text { font-size: 0.8rem; color: #999; margin-top: 20px; }
 
 /* Controls */
 .action-buttons {
     display: flex;
     justify-content: center;
-    gap: 15px;
+    gap: 10px;
     margin-top: 30px;
+    flex-wrap: wrap;
 }
 
 .action-buttons button {
-    padding: 12px 24px;
+    padding: 12px 20px;
     border: none;
     border-radius: 50px;
     font-weight: 600;
@@ -175,93 +177,73 @@ main {
 .btn-prev, .btn-next { background: var(--text); }
 .btn-mark { background: var(--success); }
 .btn-hard { background: var(--danger); }
+.btn-game-mode { background: #fdcb6e; color: #333; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
 /* Progress Bar */
 .progress-bar-container { width: 100%; background: #e0e0e0; height: 8px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
 .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; }
 
-/* --- GAME STYLES (NEW) --- */
-.game-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-.game-tabs button {
-    padding: 10px 20px; background: white; border: 1px solid #ccc; border-radius: 20px; cursor: pointer;
-}
-.game-tabs button:hover { background: #eee; }
-
-.score-board {
-    text-align: right;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--primary);
-    margin-bottom: 10px;
-    padding-right: 10px;
+/* --- GAME MENU --- */
+.game-menu {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 40px;
+    flex-wrap: wrap;
 }
 
-.question-box {
-    text-align: center;
-    margin-bottom: 30px;
+.game-card-select {
     background: white;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    width: 200px;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+    border: 2px solid transparent;
 }
 
-.question-box h3 { font-size: 1rem; color: #666; margin: 0; }
+.game-card-select:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(108, 92, 231, 0.2);
+    border-color: var(--primary);
+}
+
+.game-icon { font-size: 3rem; margin-bottom: 15px; }
+.game-card-select h3 { margin: 0 0 10px 0; color: var(--primary); }
+.game-card-select p { font-size: 0.9rem; color: #666; margin: 0; }
+
+/* --- QUIZ GAME --- */
+.score-board { text-align: right; font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
+.question-box { text-align: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 .target-word { font-size: 2.5rem; color: var(--primary); margin: 10px 0; }
 
-.options-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 cột */
-    gap: 15px;
-}
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.game-btn { padding: 20px; background: white; border: 2px solid #eee; border-radius: 12px; cursor: pointer; font-size: 1.1rem; color: var(--text); transition: all 0.2s; font-weight: 500; }
+.game-btn:hover:not([disabled]) { border-color: var(--primary); transform: translateY(-2px); }
+.game-btn.correct { background: var(--success); color: white; border-color: var(--success); }
+.game-btn.wrong { background: var(--danger); color: white; border-color: var(--danger); }
 
-.game-btn {
-    padding: 20px;
-    background: white;
-    border: 2px solid #eee;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    color: var(--text);
-    transition: all 0.2s;
-    font-weight: 500;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.game-btn:hover:not([disabled]) {
-    border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-}
-
-.game-btn.correct {
-    background: var(--success);
-    color: white;
-    border-color: var(--success);
-    animation: popIn 0.3s;
-}
-
-.game-btn.wrong {
-    background: var(--danger);
-    color: white;
-    border-color: var(--danger);
-    animation: shake 0.4s;
-}
+/* --- MATCHING GAME --- */
+.matching-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
+.match-card { background: white; height: 100px; display: flex; justify-content: center; align-items: center; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; font-weight: 600; text-align: center; font-size: 0.9rem; transition: all 0.2s; border: 2px solid #eee; user-select: none; }
+.match-card:hover { transform: scale(1.02); border-color: var(--primary); }
+.match-card.selected { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05); }
+.match-card.matched { background: var(--success); color: white; border-color: var(--success); opacity: 0; pointer-events: none; transform: scale(0); transition: all 0.5s; }
+.match-card.wrong { background: var(--danger); color: white; border-color: var(--danger); animation: shake 0.4s; }
 
 /* Review List */
-#difficult-list li {
-    background: white; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
+#difficult-list li { background: white; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
 @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes popIn { 0% { transform: scale(0.9); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }
 
 /* Mobile */
 @media (max-width: 600px) {
-    .options-grid { grid-template-columns: 1fr; } /* 1 cột trên điện thoại */
+    .options-grid { grid-template-columns: 1fr; }
+    .matching-grid { grid-template-columns: repeat(2, 1fr); }
     .flashcard-container { height: 280px; }
-    .action-buttons { gap: 8px; flex-wrap: wrap; }
     .action-buttons button { flex: 1 1 40%; font-size: 0.8rem; }
-    nav { padding: 1rem; }
+    .game-card-select { width: 100%; margin-bottom: 10px; }
 }
