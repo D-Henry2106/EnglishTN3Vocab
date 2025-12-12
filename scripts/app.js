@@ -56,6 +56,8 @@ const app = {
     },
 
     generateAutoExample: function(word) {
+        // Những câu này chỉ dùng cho Flashcard khi thiếu dữ liệu
+        // Sẽ bị CHẶN khi chơi game điền từ
         const templates = [
             `I am trying to remember the word "<strong>${word}</strong>".`,
             `The teacher explained the meaning of "<strong>${word}</strong>" in class.`,
@@ -78,7 +80,7 @@ const app = {
                 let word = row[0];
                 let meaning = row[1] || 'Đang cập nhật nghĩa...';
                 let example = row[2];
-                // Nếu không có ví dụ thì tự tạo
+                // Nếu không có ví dụ thì tự tạo (để hiển thị flashcard cho đẹp)
                 if (!example || example.trim() === "") example = this.generateAutoExample(word);
                 return { word, meaning, example };
             }).filter(item => item !== null);
@@ -296,37 +298,68 @@ const app = {
         area.appendChild(grid);
     },
 
-    // 2. GAME ĐIỀN TỪ (Có giải thích lỗi sai)
+    // 2. GAME ĐIỀN TỪ (BẢN NÂNG CẤP - BỘ LỌC THÔNG MINH)
     startFillBlank: function() {
         document.getElementById('game-menu').style.display = 'none';
         const area = document.getElementById('game-area');
         area.classList.remove('hidden');
         area.innerHTML = '';
 
-        // Lọc những từ có ví dụ "thật" (không phải ví dụ tự tạo bởi code)
-        const validItems = this.data.filter(item => 
-            item.example && 
-            !item.example.includes("I am trying to remember") && 
-            item.example.toLowerCase().includes(item.word.toLowerCase())
-        );
+        // --- BỘ LỌC THÔNG MINH ---
+        // Lọc bỏ câu mẫu chung chung để tránh 1 câu có nhiều đáp án đúng
+        const validItems = this.data.filter(item => {
+            if (!item.example) return false;
+            
+            const ex = item.example.toLowerCase();
+            const wd = item.word.toLowerCase();
+            
+            // Danh sách các cụm từ cần loại bỏ (các câu tự động)
+            const genericPhrases = [
+                "trying to remember",
+                "today's keyword is",
+                "important to understand",
+                "explained the meaning"
+            ];
+
+            // 1. Loại bỏ nếu chứa cụm từ chung chung
+            if (genericPhrases.some(phrase => ex.includes(phrase))) return false;
+            // 2. Loại bỏ nếu ví dụ không chứa từ vựng (không thể đục lỗ)
+            if (!ex.includes(wd)) return false;
+            // 3. Loại bỏ câu quá ngắn (không đủ ngữ cảnh)
+            if (item.example.length < 15) return false;
+
+            return true;
+        });
 
         if(validItems.length < 4) {
-            area.innerHTML = "<p style='text-align:center'>Cần ít nhất 4 từ có câu ví dụ đầy đủ để chơi game này.</p>";
+            area.innerHTML = `
+                <div class="question-box">
+                    <h3>⚠️ Chưa đủ dữ liệu cho Game Điền từ</h3>
+                    <p>Game này yêu cầu từ vựng phải có <b>câu ví dụ cụ thể</b> trong file Excel.</p>
+                    <p>Hệ thống đã tự động loại bỏ các câu ví dụ mẫu (như "Today's keyword...") để đảm bảo tính chính xác.</p>
+                    <p>Hiện có: <b>${validItems.length}</b> từ hợp lệ (Cần tối thiểu 4).</p>
+                    <button class="btn-prev" onclick="app.playGameMode()">Chọn game khác</button>
+                </div>
+            `;
             return;
         }
 
-        // Chọn câu hỏi ngẫu nhiên
+        // Chọn câu hỏi ngẫu nhiên từ danh sách ĐÃ LỌC
         const target = validItems[Math.floor(Math.random() * validItems.length)];
         
-        // Thay thế từ bằng dấu ______
-        const regex = new RegExp(target.word, 'gi');
+        // Tạo câu đục lỗ (Thay thế từ bằng ______)
+        // Sử dụng Regex \b để bắt chính xác từ (tránh bắt nhầm từ con)
+        const regex = new RegExp(`\\b${target.word}\\b`, 'gi');
         const blankSentence = target.example.replace(regex, "_______");
 
-        // Tạo đáp án
+        // Tạo đáp án nhiễu
         let options = [target];
         while (options.length < 4) {
             let rand = this.data[Math.floor(Math.random() * this.data.length)];
-            if (!options.includes(rand)) options.push(rand);
+            // Đảm bảo đáp án nhiễu không trùng và không xuất hiện trong câu ví dụ
+            if (rand.word !== target.word && !options.includes(rand) && !target.example.toLowerCase().includes(rand.word.toLowerCase())) {
+                options.push(rand);
+            }
         }
         options.sort(() => Math.random() - 0.5);
 
@@ -335,7 +368,9 @@ const app = {
         questionBox.className = 'question-box';
         questionBox.innerHTML = `
             <h3>Điền từ vào chỗ trống:</h3>
-            <p style="font-size:1.3rem; font-style:italic; color:#555">"${blankSentence}"</p>
+            <p style="font-size:1.3rem; font-style:italic; color:#555; line-height:1.5; margin: 20px 0;">
+                "${blankSentence}"
+            </p>
         `;
         area.appendChild(questionBox);
 
@@ -367,12 +402,18 @@ const app = {
                 } else {
                     // SAI - Hiện giải thích chi tiết
                     btn.classList.add('wrong');
+                    
+                    // Tìm và bôi xanh đáp án đúng
+                    allBtns.forEach(b => {
+                        if (b.innerText === target.word) b.classList.add('correct');
+                    });
+
                     feedbackBox.innerHTML = `
                         <h4>Sai rồi! 😢</h4>
                         <p><strong>Bạn chọn:</strong> "<b>${opt.word}</b>" (Nghĩa: ${opt.meaning})</p>
-                        <p><strong>Nhưng câu này cần:</strong> "<b>${target.word}</b>" (Nghĩa: ${target.meaning})</p>
+                        <p><strong>Đáp án đúng:</strong> "<b>${target.word}</b>" (Nghĩa: ${target.meaning})</p>
                         <hr style="margin:10px 0; border:0; border-top:1px solid #ddd">
-                        <p><strong>Câu đúng:</strong> ${target.example}</p>
+                        <p><strong>Câu hoàn chỉnh:</strong> ${target.example}</p>
                     `;
                     feedbackBox.classList.remove('hidden');
                     
