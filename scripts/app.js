@@ -2,6 +2,7 @@ const app = {
     data: [], 
     currentTopic: '',
     currentIndex: 0,
+    score: 0, // Thêm biến điểm số
     learned: JSON.parse(localStorage.getItem('vocab_learned')) || [],
     difficult: JSON.parse(localStorage.getItem('vocab_difficult')) || [],
 
@@ -45,7 +46,6 @@ const app = {
         }
     },
 
-    // --- TỰ ĐỘNG TẠO VÍ DỤ NẾU THIẾU ---
     generateAutoExample: function(word) {
         const templates = [
             `I am trying to remember the word "<strong>${word}</strong>".`,
@@ -53,12 +53,8 @@ const app = {
             `Have you ever heard the word "<strong>${word}</strong>" before?`,
             `It is important to understand what "<strong>${word}</strong>" means.`,
             `We can use "<strong>${word}</strong>" in many different contexts.`,
-            `Please look up "<strong>${word}</strong>" in the dictionary.`,
-            `Today's keyword is "<strong>${word}</strong>".`,
-            `Let's make a sentence with "<strong>${word}</strong>".`,
-            `I found the word "<strong>${word}</strong>" in a book yesterday.`
+            `Today's keyword is "<strong>${word}</strong>".`
         ];
-        // Chọn ngẫu nhiên 1 câu
         return templates[Math.floor(Math.random() * templates.length)];
     },
 
@@ -68,23 +64,14 @@ const app = {
             const arrayBuffer = await response.arrayBuffer();
             const workbook = XLSX.read(arrayBuffer);
             const sheetName = workbook.SheetNames[0];
-            
-            // Đọc file Excel bỏ qua tiêu đề cột
             const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
 
-            // Xử lý dữ liệu
             this.data = rawData.slice(1).map(row => {
                 if (!row[0]) return null;
-                
                 let word = row[0];
                 let meaning = row[1] || 'Đang cập nhật nghĩa...';
-                let example = row[2]; // Lấy cột ví dụ từ Excel
-
-                // LOGIC: Nếu cột ví dụ trống, tự động tạo câu
-                if (!example || example.trim() === "") {
-                    example = this.generateAutoExample(word);
-                }
-
+                let example = row[2];
+                if (!example || example.trim() === "") example = this.generateAutoExample(word);
                 return { word, meaning, example };
             }).filter(item => item !== null);
 
@@ -100,7 +87,7 @@ const app = {
             this.loadCard();
         } catch (error) {
             console.error(error);
-            alert('Lỗi đọc file! Kiểm tra lại file Excel trong thư mục data.');
+            alert('Lỗi đọc file! Kiểm tra lại file Excel.');
         }
     },
 
@@ -111,18 +98,14 @@ const app = {
         const card = document.querySelector('.flashcard');
         card.classList.remove('flipped');
         
-        // Reset animation
         card.style.animation = 'none';
         card.offsetHeight; 
         card.style.animation = 'fadeIn 0.5s';
 
         document.getElementById('card-word').innerText = item.word;
         document.getElementById('card-meaning').innerText = item.meaning;
-        
-        // Hiển thị ví dụ (có hỗ trợ HTML để in đậm từ vựng)
         document.getElementById('card-example').innerHTML = item.example;
 
-        // Cập nhật thanh tiến độ
         document.getElementById('progress-text').innerText = `${this.currentIndex + 1} / ${this.data.length}`;
         const pct = ((this.currentIndex + 1) / this.data.length) * 100;
         document.getElementById('progress-fill').style.width = `${pct}%`;
@@ -157,7 +140,6 @@ const app = {
         if (!this.learned.includes(word)) {
             this.learned.push(word);
             localStorage.setItem('vocab_learned', JSON.stringify(this.learned));
-            
             const btn = document.querySelector('.btn-mark');
             btn.innerHTML = 'Saved! <i class="fas fa-check"></i>';
             setTimeout(() => btn.innerHTML = 'Mark Learned <i class="fas fa-check"></i>', 1000);
@@ -187,9 +169,7 @@ const app = {
         
         const list = document.getElementById('difficult-list');
         list.innerHTML = '';
-        if(this.difficult.length === 0) {
-            list.innerHTML = '<p style="opacity:0.6">Chưa có từ khó nào.</p>';
-        }
+        if(this.difficult.length === 0) list.innerHTML = '<p style="opacity:0.6">Chưa có từ khó nào.</p>';
         this.difficult.forEach(item => {
             const li = document.createElement('li');
             li.innerHTML = `<span>${item.word}</span> <small>${item.meaning}</small>`;
@@ -204,19 +184,26 @@ const app = {
         }
     },
     
+    // --- GAME LOGIC MỚI ---
     playGameMode: function() {
+        this.score = 0; // Reset điểm
         this.showSection('games-section');
+        this.startQuiz();
     },
 
-    // --- GAME LOGIC ---
     startQuiz: function() {
         const area = document.getElementById('game-area');
+        area.innerHTML = ''; // Xóa nội dung cũ
+
         if(this.data.length < 4) {
-            area.innerHTML = "<p>Cần ít nhất 4 từ vựng để tạo câu hỏi trắc nghiệm.</p>";
+            area.innerHTML = "<p>Cần ít nhất 4 từ vựng để chơi game.</p>";
             return;
         }
 
+        // Chọn từ khóa ngẫu nhiên
         const target = this.data[Math.floor(Math.random() * this.data.length)];
+        
+        // Chọn 3 đáp án sai
         let options = [target];
         while (options.length < 4) {
             let rand = this.data[Math.floor(Math.random() * this.data.length)];
@@ -224,40 +211,61 @@ const app = {
         }
         options.sort(() => Math.random() - 0.5);
 
-        let html = `
-            <div class="quiz-container">
-                <h3>Chọn nghĩa đúng của: <br><span class="highlight-word">${target.word}</span></h3>
-                <div class="options-grid">
-        `;
+        // --- TẠO GIAO DIỆN GAME BẰNG JS (An toàn hơn HTML string) ---
         
+        // 1. Hiển thị điểm
+        const scoreBoard = document.createElement('div');
+        scoreBoard.className = 'score-board';
+        scoreBoard.innerHTML = `Score: <span>${this.score}</span>`;
+        area.appendChild(scoreBoard);
+
+        // 2. Câu hỏi
+        const questionBox = document.createElement('div');
+        questionBox.className = 'question-box';
+        questionBox.innerHTML = `<h3>Chọn nghĩa đúng của:</h3><h1 class="target-word">${target.word}</h1>`;
+        // Tự động phát âm khi hiện câu hỏi
+        const utterance = new SpeechSynthesisUtterance(target.word);
+        utterance.lang = 'en-US'; 
+        window.speechSynthesis.speak(utterance);
+        
+        area.appendChild(questionBox);
+
+        // 3. Lưới đáp án
+        const grid = document.createElement('div');
+        grid.className = 'options-grid';
+
         options.forEach(opt => {
-            html += `<button class="game-btn" onclick="app.checkAnswer(this, '${opt.word}', '${target.word}')">${opt.meaning}</button>`;
-        });
-        
-        html += `</div></div>`;
-        area.innerHTML = html;
-    },
+            const btn = document.createElement('button');
+            btn.className = 'game-btn';
+            btn.innerText = opt.meaning;
+            
+            // Gán sự kiện click trực tiếp
+            btn.onclick = () => {
+                // Khóa tất cả nút
+                const allBtns = grid.querySelectorAll('button');
+                allBtns.forEach(b => b.disabled = true);
 
-    checkAnswer: function(btn, selected, correct) {
-        const allBtns = document.querySelectorAll('.game-btn');
-        allBtns.forEach(b => b.disabled = true);
-
-        if (selected === correct) {
-            btn.classList.add('correct');
-            setTimeout(() => this.startQuiz(), 1000);
-        } else {
-            btn.classList.add('wrong');
-            allBtns.forEach(b => {
-                if(b.innerText === this.data.find(i => i.word === correct).meaning) {
-                    b.classList.add('correct');
+                if (opt.word === target.word) {
+                    btn.classList.add('correct');
+                    this.score += 10;
+                    setTimeout(() => this.startQuiz(), 1000); // Chuyển câu sau 1s
+                } else {
+                    btn.classList.add('wrong');
+                    // Tìm và hiện đáp án đúng
+                    allBtns.forEach(b => {
+                        if (b.innerText === target.meaning) b.classList.add('correct');
+                    });
+                    setTimeout(() => this.startQuiz(), 2000); // Chuyển câu sau 2s
                 }
-            });
-            setTimeout(() => this.startQuiz(), 2000);
-        }
+            };
+            grid.appendChild(btn);
+        });
+
+        area.appendChild(grid);
     },
 
     startMatch: function() {
-        document.getElementById('game-area').innerHTML = "<p style='text-align:center'>Tính năng đang phát triển...</p>";
+        document.getElementById('game-area').innerHTML = "<p style='text-align:center; padding:20px;'>Sắp ra mắt!</p>";
     }
 };
 
